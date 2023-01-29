@@ -1,0 +1,9 @@
+__pycache__
+tmp*
+data/
+trial*/
+volsdf/
+**volsdf*
+**ipynb_checkpoints**
+*.egg-info/
+*.egg
