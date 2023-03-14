@@ -1,3 +1,6 @@
+'''
+Make us of numpy file which contains the positons of the camera taken from a far away distance and then take the camera closer and click images from that orientation
+'''
 import argparse, sys, os
 import json
 import bpy
@@ -13,29 +16,36 @@ import pprint
 #import bmesh
 import sys
 
+import warnings
+warnings.filterwarnings("ignore")
+
 # parameters and lists
 i = 0
 RESOLUTION = 1024
-RESULTS_PATH = r'depth_0.25'
+RESULTS_PATH = r'depth_0.5_remapped'
 FORMAT = 'PNG'
 cut_off_index = 10
 render_engine = 'BLENDER_EEVEE'
 #render_device = 'GPU'
 camera_type = 'PERSPECTIVE'
 #panorama_type = 'FISHEYE_EQUIDISTANT'
-clip_start = 0.0001
-clip_end = 0.5
+clip_start = 0.01
+clip_end = 0.75
 camera_initial_loc = Vector((2,0,0))
-offset_distance = -0.55
+offset_distance = 0
 angle_x = 60
+fib_radius = 0.5
 
-
-path_1 = r"E:\Stanford\Stanford COURSES\First Year\Quarter 2\Research Assistant\depth_camera_orientation.npy"
+#path_1 = r"E:\Stanford\Stanford COURSES\First Year\Quarter 2\Research Assistant\depth_camera_orientation.npy"
 path_2 = r"E:\Stanford\Stanford COURSES\First Year\Quarter 2\Research Assistant\depth_camera_positions.npy"
 
 
-depth_camera_orientation = np.load(path_1)
+#depth_camera_orientation = np.load(path_1)
 depth_camera_position = np.load(path_2)
+
+print(len(depth_camera_position), len(depth_camera_position[0]))
+
+#sys.exit()
 
 #print(depth_camera_orientation)
 
@@ -49,8 +59,8 @@ bpy.context.scene.render.engine = render_engine
 bpy.context.scene.use_nodes = True
 #bpy.context.scene.view_layers["ViewLayer"].use_pass_z = True
 
-bpy.context.object.data.clip_start = clip_start
-bpy.context.object.data.clip_end = clip_end
+bpy.data.objects['Camera'].data.clip_start = clip_start
+bpy.data.objects['Camera'].data.clip_end = clip_end
 
 
 # to set the focal length and field of view
@@ -103,7 +113,8 @@ def get_depth_image(b_invert = False, save_fn = None):
     # to assign raw image to the "depth" variable
     depth = raw
     # to normalize in range 0 to 255
-    img8 = (raw - depth0)/(depth1-depth0)*255
+    #img8 = (raw - depth0)/(depth1-depth0)*255
+    img8 = (raw - 0.5*depth1)/(fib_radius - 0.5*depth1) * 255
     img8 = img8.astype(np.uint8)
     # if we want to get the disparity image then use this condition
     if b_invert:
@@ -158,7 +169,8 @@ print("Starting the script......")
 
 look_at_pt = (0., 0., 0.)
 bpy.context.scene.camera = camera
-for i, pos, orient in zip(range(0, len(depth_camera_orientation)), depth_camera_position[0], depth_camera_orientation):
+#for i, pos, orient in zip(range(0, len(depth_camera_orientation)), depth_camera_position[0], depth_camera_orientation):
+for i, pos in enumerate(depth_camera_position[0]):
     camera.location = pos
     look_at(camera, look_at_pt)
     #camera_rotation(camera, orient)
@@ -190,6 +202,8 @@ for i, pos, orient in zip(range(0, len(depth_camera_orientation)), depth_camera_
     out_data['frames'].append(frame_data)
     depth_out_data['frames'].append(depth_frame_data)
 
+    print("Processed image {}...".format(i))
+
 
 with open(fp + '/' + f'transforms_vert_{RESULTS_PATH}.json', 'w') as out_file:
     json.dump(out_data, out_file, indent=4)
@@ -201,3 +215,8 @@ with open(os.path.join(fp,RESULTS_PATH, f'transforms_vert_{RESULTS_PATH}.json'),
 
 
 
+# # Delete all cameras
+# bpy.ops.object.select_all(action='DESELECT')
+# if bpy.context.scene.objects.get(["Camera"]):
+#     bpy.data.objects['Camera'].select_set(True)
+#     bpy.ops.object.delete()

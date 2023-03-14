@@ -1,3 +1,8 @@
+'''
+Collect the initial color and depth images and make store the camera positions in a numpy array. Then in a different script make use of these camera positions to take images from close distances
+using the same orientation
+'''
+
 import argparse, sys, os
 import json
 import bpy
@@ -12,6 +17,9 @@ import random
 import pprint
 import bmesh
 import sys
+
+import warnings
+warnings.filterwarnings("ignore")
 
 #camera = 'Camera'  #'Camera.001' # 'Camera'
 #VIEWS = 400
@@ -181,9 +189,9 @@ if __name__ == "__main__":
             #     "psi": 0,
             #    },
 
-               {"name": "camera_2", "angle_x":60, "near":.1,
-                "far":1, "res_x": 1024, "res_y": 1024,
-                "radius": .8, "zcutoff": None, "num_views": 10,
+               {"name": "camera_2", "angle_x":60, "near":.01,
+                "far":0.75, "res_x": 1024, "res_y": 1024,
+                "radius": .5, "zcutoff": None, "num_views": 10,
                 "type":['depth'], "pose_method": "fibonacci_sphere",
                },
 #
@@ -422,7 +430,7 @@ print()
 print("saving the numpy arrays......")
 
 # to save the depth camera orientation and the camera locations
-np.save(path_1, camera_orientation_depth)
+#np.save(path_1, camera_orientation_depth)
 np.save(path_2, depth_points)
 
 print()
